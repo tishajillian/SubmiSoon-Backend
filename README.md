@@ -56,7 +56,13 @@ Using Visual Studio:
 - Press `F5` to run
 - Swagger UI opens automatically
 
-Using CLI:
+Using CLI,  run this to immediately connect to the running app in swagger UI:
+```bash
+dotnet watch run
+```
+
+OR
+
 ```bash
 dotnet run --project SubmiSoonProject
 ```
