@@ -384,11 +384,11 @@ namespace SubmiSoonProject.Data
                 new Question { AssessmentId = assessments[0].AssessmentId, Type = QuestionType.mcq, Content = "Which symbol is used for comments in C#?", CreatedAt = DateTime.Now }
             });
 
-            // CS101 Assessment 2: Assignment 1 (2 file + 1 essay)
+            // CS101 Assessment 2: Assignment 1 (3 essay)
             questionsList.AddRange(new[]
             {
-                new Question { AssessmentId = assessments[1].AssessmentId, Type = QuestionType.file, Content = "Upload your HelloWorld.cs program file", CreatedAt = DateTime.Now },
-                new Question { AssessmentId = assessments[1].AssessmentId, Type = QuestionType.file, Content = "Upload a screenshot showing your program output", CreatedAt = DateTime.Now },
+                new Question { AssessmentId = assessments[1].AssessmentId, Type = QuestionType.essay, Content = "Describe your HelloWorld.cs program and explain each line of code.", CreatedAt = DateTime.Now },
+                new Question { AssessmentId = assessments[1].AssessmentId, Type = QuestionType.essay, Content = "What output does your program display and why?", CreatedAt = DateTime.Now },
                 new Question { AssessmentId = assessments[1].AssessmentId, Type = QuestionType.essay, Content = "Explain in your own words what your program does and how it works.", CreatedAt = DateTime.Now }
             });
 
@@ -402,24 +402,24 @@ namespace SubmiSoonProject.Data
                 new Question { AssessmentId = assessments[2].AssessmentId, Type = QuestionType.mcq, Content = "Which operator is used for string concatenation?", CreatedAt = DateTime.Now }
             });
 
-            // CS101 Assessment 4: Midterm Project (3 file + 2 essay)
+            // CS101 Assessment 4: Midterm Project (3 essay + 2 file) - INCOMPLETE/ONGOING
             questionsList.AddRange(new[]
             {
-                new Question { AssessmentId = assessments[3].AssessmentId, Type = QuestionType.file, Content = "Upload your complete Calculator source code (.cs files)", CreatedAt = DateTime.Now },
-                new Question { AssessmentId = assessments[3].AssessmentId, Type = QuestionType.file, Content = "Upload test cases demonstrating all calculator operations", CreatedAt = DateTime.Now },
-                new Question { AssessmentId = assessments[3].AssessmentId, Type = QuestionType.file, Content = "Upload a demo video of your calculator application", CreatedAt = DateTime.Now },
+                new Question { AssessmentId = assessments[3].AssessmentId, Type = QuestionType.essay, Content = "Describe your complete Calculator source code structure and main components.", CreatedAt = DateTime.Now },
                 new Question { AssessmentId = assessments[3].AssessmentId, Type = QuestionType.essay, Content = "Describe the architecture of your calculator and explain your design decisions.", CreatedAt = DateTime.Now },
-                new Question { AssessmentId = assessments[3].AssessmentId, Type = QuestionType.essay, Content = "What challenges did you face and how did you overcome them?", CreatedAt = DateTime.Now }
+                new Question { AssessmentId = assessments[3].AssessmentId, Type = QuestionType.essay, Content = "What challenges did you face and how did you overcome them?", CreatedAt = DateTime.Now },
+                new Question { AssessmentId = assessments[3].AssessmentId, Type = QuestionType.file, Content = "Upload your complete Calculator source code (.cs files or .zip)", CreatedAt = DateTime.Now },
+                new Question { AssessmentId = assessments[3].AssessmentId, Type = QuestionType.file, Content = "Upload a demo video or screenshots of your calculator application", CreatedAt = DateTime.Now }
             });
 
-            // CS101 Assessment 5: Final Project (3 file + 2 essay)
+            // CS101 Assessment 5: Final Project (3 essay + 2 file) - INCOMPLETE/FUTURE
             questionsList.AddRange(new[]
             {
-                new Question { AssessmentId = assessments[4].AssessmentId, Type = QuestionType.file, Content = "Upload your complete Student Management System project files (zip)", CreatedAt = DateTime.Now },
-                new Question { AssessmentId = assessments[4].AssessmentId, Type = QuestionType.file, Content = "Upload user documentation (PDF)", CreatedAt = DateTime.Now },
-                new Question { AssessmentId = assessments[4].AssessmentId, Type = QuestionType.file, Content = "Upload demo video showcasing all features", CreatedAt = DateTime.Now },
+                new Question { AssessmentId = assessments[4].AssessmentId, Type = QuestionType.essay, Content = "Describe your complete Student Management System project structure and key components.", CreatedAt = DateTime.Now },
                 new Question { AssessmentId = assessments[4].AssessmentId, Type = QuestionType.essay, Content = "Explain the database schema and relationships in your system.", CreatedAt = DateTime.Now },
-                new Question { AssessmentId = assessments[4].AssessmentId, Type = QuestionType.essay, Content = "Reflect on what you learned throughout this course.", CreatedAt = DateTime.Now }
+                new Question { AssessmentId = assessments[4].AssessmentId, Type = QuestionType.essay, Content = "Reflect on what you learned throughout this course.", CreatedAt = DateTime.Now },
+                new Question { AssessmentId = assessments[4].AssessmentId, Type = QuestionType.file, Content = "Upload your complete Student Management System project files (zip)", CreatedAt = DateTime.Now },
+                new Question { AssessmentId = assessments[4].AssessmentId, Type = QuestionType.file, Content = "Upload user documentation (PDF) and demo video showcasing all features", CreatedAt = DateTime.Now }
             });
 
             // CS201 Assessment 1: Arrays and Linked Lists Quiz (5 MCQ)
@@ -432,11 +432,11 @@ namespace SubmiSoonProject.Data
                 new Question { AssessmentId = assessments[5].AssessmentId, Type = QuestionType.mcq, Content = "Which data structure uses LIFO order?", CreatedAt = DateTime.Now }
             });
 
-            // CS201 Assessment 2: Stack and Queue Assignment (2 file + 2 essay)
+            // CS201 Assessment 2: Stack and Queue Assignment (4 essay)
             questionsList.AddRange(new[]
             {
-                new Question { AssessmentId = assessments[6].AssessmentId, Type = QuestionType.file, Content = "Upload your Stack implementation with all methods", CreatedAt = DateTime.Now },
-                new Question { AssessmentId = assessments[6].AssessmentId, Type = QuestionType.file, Content = "Upload your Queue implementation with all methods", CreatedAt = DateTime.Now },
+                new Question { AssessmentId = assessments[6].AssessmentId, Type = QuestionType.essay, Content = "Describe your Stack implementation including all methods (push, pop, peek, isEmpty).", CreatedAt = DateTime.Now },
+                new Question { AssessmentId = assessments[6].AssessmentId, Type = QuestionType.essay, Content = "Describe your Queue implementation including all methods (enqueue, dequeue, peek, isEmpty).", CreatedAt = DateTime.Now },
                 new Question { AssessmentId = assessments[6].AssessmentId, Type = QuestionType.essay, Content = "Compare and contrast Stack and Queue data structures.", CreatedAt = DateTime.Now },
                 new Question { AssessmentId = assessments[6].AssessmentId, Type = QuestionType.essay, Content = "Provide real-world examples where Stack and Queue are used.", CreatedAt = DateTime.Now }
             });
@@ -451,7 +451,7 @@ namespace SubmiSoonProject.Data
                 new Question { AssessmentId = assessments[7].AssessmentId, Type = QuestionType.mcq, Content = "What is a spanning tree?", CreatedAt = DateTime.Now }
             });
 
-            // CS201 Assessment 4: Midterm Exam (6 MCQ + 2 essay)
+            // CS201 Assessment 4: Midterm Exam (6 MCQ + 2 essay + 1 file) - INCOMPLETE/ONGOING
             questionsList.AddRange(new[]
             {
                 new Question { AssessmentId = assessments[8].AssessmentId, Type = QuestionType.mcq, Content = "What is the time complexity of Bubble Sort in the worst case?", CreatedAt = DateTime.Now },
@@ -461,16 +461,17 @@ namespace SubmiSoonProject.Data
                 new Question { AssessmentId = assessments[8].AssessmentId, Type = QuestionType.mcq, Content = "What does 'stable sort' mean?", CreatedAt = DateTime.Now },
                 new Question { AssessmentId = assessments[8].AssessmentId, Type = QuestionType.mcq, Content = "Which search algorithm works on unsorted arrays?", CreatedAt = DateTime.Now },
                 new Question { AssessmentId = assessments[8].AssessmentId, Type = QuestionType.essay, Content = "Explain Quick Sort algorithm with an example.", CreatedAt = DateTime.Now },
-                new Question { AssessmentId = assessments[8].AssessmentId, Type = QuestionType.essay, Content = "Compare the performance of different sorting algorithms.", CreatedAt = DateTime.Now }
+                new Question { AssessmentId = assessments[8].AssessmentId, Type = QuestionType.essay, Content = "Compare the performance of different sorting algorithms.", CreatedAt = DateTime.Now },
+                new Question { AssessmentId = assessments[8].AssessmentId, Type = QuestionType.file, Content = "Upload your implementation of a sorting algorithm (code file)", CreatedAt = DateTime.Now }
             });
 
-            // CS201 Assessment 5: Final Project (3 file + 1 essay)
+            // CS201 Assessment 5: Final Project (2 essay + 2 file) - INCOMPLETE/FUTURE
             questionsList.AddRange(new[]
             {
-                new Question { AssessmentId = assessments[9].AssessmentId, Type = QuestionType.file, Content = "Upload your algorithm visualization project source code", CreatedAt = DateTime.Now },
-                new Question { AssessmentId = assessments[9].AssessmentId, Type = QuestionType.file, Content = "Upload screenshots of different algorithm visualizations", CreatedAt = DateTime.Now },
-                new Question { AssessmentId = assessments[9].AssessmentId, Type = QuestionType.file, Content = "Upload project documentation and user guide", CreatedAt = DateTime.Now },
-                new Question { AssessmentId = assessments[9].AssessmentId, Type = QuestionType.essay, Content = "Explain the algorithms you visualized and the techniques used for visualization.", CreatedAt = DateTime.Now }
+                new Question { AssessmentId = assessments[9].AssessmentId, Type = QuestionType.essay, Content = "Describe your algorithm visualization project and explain the algorithms you visualized.", CreatedAt = DateTime.Now },
+                new Question { AssessmentId = assessments[9].AssessmentId, Type = QuestionType.essay, Content = "Explain the techniques and technologies you used for visualization.", CreatedAt = DateTime.Now },
+                new Question { AssessmentId = assessments[9].AssessmentId, Type = QuestionType.file, Content = "Upload your algorithm visualization project source code (zip)", CreatedAt = DateTime.Now },
+                new Question { AssessmentId = assessments[9].AssessmentId, Type = QuestionType.file, Content = "Upload project documentation and screenshots of different algorithm visualizations", CreatedAt = DateTime.Now }
             });
 
             // CS301 Assessment 1: SQL Fundamentals Quiz (5 MCQ)
@@ -483,11 +484,11 @@ namespace SubmiSoonProject.Data
                 new Question { AssessmentId = assessments[10].AssessmentId, Type = QuestionType.mcq, Content = "Which SQL clause is used to sort results?", CreatedAt = DateTime.Now }
             });
 
-            // CS301 Assessment 2: Database Design Assignment (2 file + 2 essay)
+            // CS301 Assessment 2: Database Design Assignment (4 essay)
             questionsList.AddRange(new[]
             {
-                new Question { AssessmentId = assessments[11].AssessmentId, Type = QuestionType.file, Content = "Upload your ER diagram for the library management system", CreatedAt = DateTime.Now },
-                new Question { AssessmentId = assessments[11].AssessmentId, Type = QuestionType.file, Content = "Upload SQL scripts to create your database schema", CreatedAt = DateTime.Now },
+                new Question { AssessmentId = assessments[11].AssessmentId, Type = QuestionType.essay, Content = "Describe your ER diagram for the library management system in detail.", CreatedAt = DateTime.Now },
+                new Question { AssessmentId = assessments[11].AssessmentId, Type = QuestionType.essay, Content = "Provide the SQL scripts to create your database schema with explanations.", CreatedAt = DateTime.Now },
                 new Question { AssessmentId = assessments[11].AssessmentId, Type = QuestionType.essay, Content = "Explain the entities, attributes, and relationships in your design.", CreatedAt = DateTime.Now },
                 new Question { AssessmentId = assessments[11].AssessmentId, Type = QuestionType.essay, Content = "Justify your design decisions and explain how it meets requirements.", CreatedAt = DateTime.Now }
             });
@@ -502,7 +503,7 @@ namespace SubmiSoonProject.Data
                 new Question { AssessmentId = assessments[12].AssessmentId, Type = QuestionType.mcq, Content = "Which type of index is created on multiple columns?", CreatedAt = DateTime.Now }
             });
 
-            // CS301 Assessment 4: Midterm Exam (6 MCQ + 2 essay)
+            // CS301 Assessment 4: Midterm Exam (6 MCQ + 2 essay + 1 file) - INCOMPLETE/ONGOING
             questionsList.AddRange(new[]
             {
                 new Question { AssessmentId = assessments[13].AssessmentId, Type = QuestionType.mcq, Content = "What is a subquery in SQL?", CreatedAt = DateTime.Now },
@@ -512,17 +513,18 @@ namespace SubmiSoonProject.Data
                 new Question { AssessmentId = assessments[13].AssessmentId, Type = QuestionType.mcq, Content = "Which statement is used to combine result sets?", CreatedAt = DateTime.Now },
                 new Question { AssessmentId = assessments[13].AssessmentId, Type = QuestionType.mcq, Content = "What is a stored procedure?", CreatedAt = DateTime.Now },
                 new Question { AssessmentId = assessments[13].AssessmentId, Type = QuestionType.essay, Content = "Write a complex SQL query using JOINs, subqueries, and aggregation.", CreatedAt = DateTime.Now },
-                new Question { AssessmentId = assessments[13].AssessmentId, Type = QuestionType.essay, Content = "Explain database transactions and ACID properties.", CreatedAt = DateTime.Now }
+                new Question { AssessmentId = assessments[13].AssessmentId, Type = QuestionType.essay, Content = "Explain database transactions and ACID properties.", CreatedAt = DateTime.Now },
+                new Question { AssessmentId = assessments[13].AssessmentId, Type = QuestionType.file, Content = "Upload your SQL query solutions file (.sql)", CreatedAt = DateTime.Now }
             });
 
-            // CS301 Assessment 5: Final Project (3 file + 2 essay)
+            // CS301 Assessment 5: Final Project (3 essay + 2 file) - INCOMPLETE/FUTURE
             questionsList.AddRange(new[]
             {
-                new Question { AssessmentId = assessments[14].AssessmentId, Type = QuestionType.file, Content = "Upload complete database schema and SQL scripts", CreatedAt = DateTime.Now },
-                new Question { AssessmentId = assessments[14].AssessmentId, Type = QuestionType.file, Content = "Upload your application code that interfaces with the database", CreatedAt = DateTime.Now },
-                new Question { AssessmentId = assessments[14].AssessmentId, Type = QuestionType.file, Content = "Upload project documentation including ER diagrams", CreatedAt = DateTime.Now },
                 new Question { AssessmentId = assessments[14].AssessmentId, Type = QuestionType.essay, Content = "Describe your database design and explain the normalization level achieved.", CreatedAt = DateTime.Now },
-                new Question { AssessmentId = assessments[14].AssessmentId, Type = QuestionType.essay, Content = "Discuss performance optimizations you implemented (indexes, queries, etc.).", CreatedAt = DateTime.Now }
+                new Question { AssessmentId = assessments[14].AssessmentId, Type = QuestionType.essay, Content = "Explain your application code that interfaces with the database including key functions.", CreatedAt = DateTime.Now },
+                new Question { AssessmentId = assessments[14].AssessmentId, Type = QuestionType.essay, Content = "Discuss performance optimizations you implemented (indexes, queries, etc.).", CreatedAt = DateTime.Now },
+                new Question { AssessmentId = assessments[14].AssessmentId, Type = QuestionType.file, Content = "Upload complete database schema, SQL scripts, and ER diagrams", CreatedAt = DateTime.Now },
+                new Question { AssessmentId = assessments[14].AssessmentId, Type = QuestionType.file, Content = "Upload your complete e-commerce application code and documentation", CreatedAt = DateTime.Now }
             });
 
             var questions = questionsList.ToArray();
@@ -725,6 +727,213 @@ namespace SubmiSoonProject.Data
             context.UserAssessments.AddRange(userAssessments);
             context.SaveChanges();
             Console.WriteLine($"Seeded {userAssessments.Length} user assessments successfully!");
+
+            // 14. Seed Answers for completed, on_review, and draft assessments
+            var answersList = new List<Answer>();
+
+            // Get completed and on_review assessments - these need ALL questions answered
+            var completedAndReviewAssessments = userAssessments
+                .Where(ua => ua.Status == AssessmentStatus.completed || 
+                             ua.Status == AssessmentStatus.on_review)
+                .ToArray();
+
+            Console.WriteLine($"Generating answers for {completedAndReviewAssessments.Length} completed/on_review assessments...");
+
+            foreach (var userAssessment in completedAndReviewAssessments)
+            {
+                // Get all questions for this assessment
+                var assessmentQuestions = questions
+                    .Where(q => q.AssessmentId == userAssessment.AssessmentId)
+                    .ToArray();
+                
+                // Determine student performance tier (for answer quality/correctness)
+                var student = students.First(s => s.UserId == userAssessment.UserId);
+                int studentIndex = Array.IndexOf(students, student);
+                bool isTopPerformer = studentIndex < 30;
+                
+                foreach (var question in assessmentQuestions)
+                {
+                    // Skip file questions - we don't generate file uploads in seeded data
+                    if (question.Type == QuestionType.file)
+                    {
+                        continue;
+                    }
+
+                    var answer = new Answer
+                    {
+                        UserAssessmentId = userAssessment.UserAssessmentId,
+                        QuestionId = question.QuestionId,
+                        CreatedAt = userAssessment.CreatedAt.AddMinutes(random.Next(5, 120)),
+                        UpdatedAt = userAssessment.UpdatedAt
+                    };
+                    
+                    switch (question.Type)
+                    {
+                        case QuestionType.mcq:
+                            // Select an option (weighted toward correct answer for top performers)
+                            var questionOptions = mcqOptions
+                                .Where(o => o.QuestionId == question.QuestionId)
+                                .ToArray();
+                            
+                            McqOption selectedOption;
+                            int correctChance = isTopPerformer ? 85 : 60; // Top performers get 85% correct, others 60%
+                            
+                            if (random.Next(100) < correctChance)
+                            {
+                                // Select correct answer
+                                selectedOption = questionOptions.First(o => o.IsCorrect);
+                            }
+                            else
+                            {
+                                // Select wrong answer
+                                var wrongOptions = questionOptions.Where(o => !o.IsCorrect).ToArray();
+                                selectedOption = wrongOptions[random.Next(wrongOptions.Length)];
+                            }
+                            
+                            answer.SelectedOptionId = selectedOption.OptionId;
+                            break;
+                            
+                        case QuestionType.essay:
+                            // Generate simple essay text
+                            var essayStarts = new[]
+                            {
+                                "In my understanding, ",
+                                "Based on what I learned, ",
+                                "To answer this question: ",
+                                "My explanation is: ",
+                                "From my perspective, ",
+                                "After studying this topic, "
+                            };
+                            
+                            string essayStart = essayStarts[random.Next(essayStarts.Length)];
+                            string essayContent = essayStart + question.Content.Substring(0, Math.Min(50, question.Content.Length));
+                            
+                            if (isTopPerformer)
+                            {
+                                essayContent += ". I have analyzed this thoroughly and can provide detailed examples and explanations. ";
+                            }
+                            else
+                            {
+                                essayContent += ". This covers the main points. ";
+                            }
+                            
+                            answer.AnswerText = essayContent;
+                            break;
+                    }
+                    
+                    answersList.Add(answer);
+                }
+            }
+
+            // Add partial answers for draft assessments with realistic distribution
+            var draftAssessments = userAssessments
+                .Where(ua => ua.Status == AssessmentStatus.draft)
+                .ToArray();
+
+            Console.WriteLine($"Generating partial answers for {draftAssessments.Length} draft assessments...");
+
+            foreach (var userAssessment in draftAssessments)
+            {
+                var assessmentQuestions = questions
+                    .Where(q => q.AssessmentId == userAssessment.AssessmentId)
+                    .ToArray();
+                
+                if (assessmentQuestions.Length == 0) continue;
+                
+                // Categorize drafts into three groups (Option B distribution)
+                int draftCategory = random.Next(100);
+                int numToAnswer;
+
+                if (draftCategory < 40) // 40% - Empty drafts (0 answers) - procrastinators
+                {
+                    numToAnswer = 0;
+                }
+                else if (draftCategory < 80) // 40% - Early progress (20-50% answered)
+                {
+                    numToAnswer = Math.Max(1, (assessmentQuestions.Length * random.Next(20, 51)) / 100);
+                }
+                else // 20% - Almost done (60-80% answered)
+                {
+                    numToAnswer = Math.Max(1, (assessmentQuestions.Length * random.Next(60, 81)) / 100);
+                }
+
+                // Skip if no answers needed (empty draft)
+                if (numToAnswer == 0)
+                {
+                    continue;
+                }
+
+                var questionsToAnswer = assessmentQuestions
+                    .OrderBy(x => random.Next())
+                    .Take(numToAnswer)
+                    .ToArray();
+                
+                var student = students.First(s => s.UserId == userAssessment.UserId);
+                int studentIndex = Array.IndexOf(students, student);
+                bool isTopPerformer = studentIndex < 30;
+                
+                foreach (var question in questionsToAnswer)
+                {
+                    // Skip file questions - we don't generate file uploads in seeded data
+                    if (question.Type == QuestionType.file)
+                    {
+                        continue;
+                    }
+
+                    var answer = new Answer
+                    {
+                        UserAssessmentId = userAssessment.UserAssessmentId,
+                        QuestionId = question.QuestionId,
+                        CreatedAt = userAssessment.CreatedAt.AddMinutes(random.Next(5, 60)),
+                        UpdatedAt = userAssessment.UpdatedAt
+                    };
+                    
+                    switch (question.Type)
+                    {
+                        case QuestionType.mcq:
+                            var questionOptions = mcqOptions
+                                .Where(o => o.QuestionId == question.QuestionId)
+                                .ToArray();
+                            
+                            McqOption selectedOption;
+                            int correctChance = isTopPerformer ? 85 : 60;
+                            
+                            if (random.Next(100) < correctChance)
+                            {
+                                selectedOption = questionOptions.First(o => o.IsCorrect);
+                            }
+                            else
+                            {
+                                var wrongOptions = questionOptions.Where(o => !o.IsCorrect).ToArray();
+                                selectedOption = wrongOptions[random.Next(wrongOptions.Length)];
+                            }
+                            
+                            answer.SelectedOptionId = selectedOption.OptionId;
+                            break;
+                            
+                        case QuestionType.essay:
+                            var essayStarts = new[]
+                            {
+                                "In my understanding, ",
+                                "Based on what I learned, ",
+                                "To answer this question: ",
+                                "My explanation is: "
+                            };
+                            
+                            string essayStart = essayStarts[random.Next(essayStarts.Length)];
+                            string essayContent = essayStart + question.Content.Substring(0, Math.Min(50, question.Content.Length));
+                            answer.AnswerText = essayContent;
+                            break;
+                    }
+                    
+                    answersList.Add(answer);
+                }
+            }
+
+            var answers = answersList.ToArray();
+            context.Answers.AddRange(answers);
+            context.SaveChanges();
+            Console.WriteLine($"Seeded {answers.Length} answers successfully!");
 
             Console.WriteLine("Database seeding completed successfully!");
         }
