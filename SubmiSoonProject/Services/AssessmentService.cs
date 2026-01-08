@@ -339,7 +339,10 @@ namespace SubmiSoonProject.Services
                                 "essay"
                             );
                         }
-                        // else: No new text but existing text exists - keep it unchanged
+                        
+                        // Save the essay text
+                        answer.AnswerText = answerInput.Text;
+                        answer.UpdatedAt = DateTime.Now;
                         break;
 
                     case QuestionType.mcq:
@@ -579,7 +582,9 @@ namespace SubmiSoonProject.Services
                             );
                         }
 
-                        // else: No new option but existing option exists - keep it unchanged
+                        // Save the validated option
+                        answer.SelectedOptionId = answerInput.OptionId;
+                        answer.UpdatedAt = DateTime.Now;
                         break;
 
                     case QuestionType.file:
