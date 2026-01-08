@@ -152,7 +152,7 @@ GET /api/files/{fileId}  # Download/preview files
 
 ## 🧪 Testing the API
 
-### 1. Using Swagger (Easiest)
+### 1. Using Swagger
 
 1. Open `https://localhost:7123/swagger`
 2. **Login** first:
