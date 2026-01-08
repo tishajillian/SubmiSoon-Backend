@@ -8,17 +8,15 @@ ASP.NET Core 8 Web API for managing student assessments, submissions, and leader
 
 ### Prerequisites
 
-**Option A: Visual Studio 2022** (Recommended)
+**Visual Studio 2022** (Recommended)
 - Download [Visual Studio 2022 Community](https://visualstudio.microsoft.com/downloads/) (free)
 - Install workloads: "ASP.NET and web development" + "Data storage and processing"
-- Includes: .NET 8 SDK + SQL Server LocalDB
+- Install: .NET 8 SDK + [SQL Server Developer Edition](https://go.microsoft.com/fwlink/?linkid=2344626&clcid=0x409&culture=en-us&country=usz)
 
-**Option B: .NET CLI**
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- [SQL Server Express](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) (free)
+**Database Management**
+- [SSMS](https://learn.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms)
 
-**Optional Tools:**
-- [SSMS](https://learn.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms) - Database management
+**API Testing**
 - [Postman](https://www.postman.com/downloads/) - API testing
 
 ### Installation
