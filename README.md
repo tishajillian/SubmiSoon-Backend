@@ -226,7 +226,7 @@ Edit your local `SubmiSoonProject/appsettings.json`:
 | `docs/SETUP_SECRETS.md` | Configuration secrets setup guide |
 | `docs/APICONTRACT_v1.3.md` | Complete API specification |
 | `docs/POSTMAN_TEST_DATA_REFERENCE.md` | Valid test IDs and scenarios |
-| `docs/ERD.md` | Database schema diagram |
+| `docs/ERD.md` [ERD v1.4 in DbDiagram](https://dbdiagram.io/d/SubmiSoon-ERD-v1-4-69539a2d39fa3db27bccfd7d)| Database schema diagram |
 
 ---
 
