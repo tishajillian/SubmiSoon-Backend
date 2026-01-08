@@ -1,0 +1,822 @@
+using Microsoft.EntityFrameworkCore;
+using SubmiSoonProject.Data;
+using SubmiSoonProject.DTOs.Assessment;
+using SubmiSoonProject.DTOs.Common;
+using SubmiSoonProject.Exceptions;
+using SubmiSoonProject.Models;
+using SubmiSoonProject.Repositories;
+using System.Security.Claims;
+
+namespace SubmiSoonProject.Services
+{
+    public interface IAssessmentService
+    {
+        Task<ApiResponse<List<IncompleteAssessmentDto>>> GetIncompleteAssessmentsAsync(int userId, int page, int size, string? semester);
+        Task<AssessmentDetailDto> GetIncompleteAssessmentDetailAsync(int assessmentId, int userId);
+        Task<AssessmentDetailDto> SaveDraftAsync(int assessmentId, int userId, SaveDraftRequest request);
+        Task<AssessmentDetailDto> SubmitAssessmentAsync(int assessmentId, int userId, SaveDraftRequest request);
+        Task<ApiResponse<List<CompletedAssessmentDto>>> GetCompletedAssessmentsAsync(int userId, int page, int size, string? semester);
+        Task<AssessmentDetailDto> GetCompletedAssessmentDetailAsync(int assessmentId, int userId);
+    }
+
+    public class AssessmentService : IAssessmentService
+    {
+        private readonly AppDbContext _context;
+        private readonly IFileService _fileService;
+        private readonly IAssessmentRepository _assessmentRepository;
+
+        public AssessmentService(AppDbContext context, IFileService fileService, IAssessmentRepository assessmentRepository)
+        {
+            _context = context;
+            _fileService = fileService;
+            _assessmentRepository = assessmentRepository;
+        }
+
+        public async Task<ApiResponse<List<IncompleteAssessmentDto>>> GetIncompleteAssessmentsAsync(
+            int userId, int page, int size, string? semester)
+        {
+            // Get student's enrolled class IDs
+            var enrolledClassIds = await _context.StudentEnrollments
+                .Where(se => se.StudentId == userId && se.Status == EnrollmentStatus.active)
+                .Select(se => se.ClassId)
+                .ToListAsync();
+
+            // Build query for assessments
+            var query = _context.Assessments
+                .Include(a => a.Class)
+                    .ThenInclude(c => c.Lecturer)
+                        .ThenInclude(l => l.User)
+                .Include(a => a.Class)
+                    .ThenInclude(c => c.Course)
+                .Include(a => a.Class)
+                    .ThenInclude(c => c.AcademicTerm)
+                .Where(a => enrolledClassIds.Contains(a.ClassId) && a.EndDate > DateTime.Now);
+
+            // Filter out completed assessments or on_review
+            var completedAssessmentIds = await _context.UserAssessments
+                .Where(ua => ua.UserId == userId && ua.Status == AssessmentStatus.completed || ua.Status == AssessmentStatus.on_review)
+                .Select(ua => ua.AssessmentId)
+                .ToListAsync();
+
+            query = query.Where(a => !completedAssessmentIds.Contains(a.AssessmentId));
+
+            // Apply semester filter if provided
+            if (!string.IsNullOrEmpty(semester))
+            {
+                if (int.TryParse(semester, out int semesterId))
+                {
+                    query = query.Where(a => a.Class.AcademicTermId == semesterId);
+                }
+            }
+
+            // Calculate pagination
+            var totalItem = await query.CountAsync();
+            var totalPage = (int)Math.Ceiling(totalItem / (double)size);
+
+            // Get paginated data
+            var assessments = await query
+                .OrderBy(a => a.EndDate)
+                .Skip((page - 1) * size)
+                .Take(size)
+                .Select(a => new IncompleteAssessmentDto
+                {
+                    Id = a.AssessmentId,
+                    Name = a.Title,
+                    Class = a.Class.ClassCode,
+                    LecturerName = a.Class.Lecturer.User.Name,
+                    StartDate = a.StartDate,
+                    EndDate = a.EndDate
+                })
+                .ToListAsync();
+
+            return new ApiResponse<List<IncompleteAssessmentDto>>
+            {
+                Data = assessments,
+                Paging = new PagingDto
+                {
+                    Page = page,
+                    Size = size,
+                    TotalItem = totalItem,
+                    TotalPage = totalPage
+                },
+                Success = true
+            };
+        }
+
+        public async Task<AssessmentDetailDto> GetIncompleteAssessmentDetailAsync(int assessmentId, int userId)
+        {
+            // Get assessment with class info
+            var assessment = await _context.Assessments
+                .Include(a => a.Class)
+                .FirstOrDefaultAsync(a => a.AssessmentId == assessmentId);
+
+            if (assessment == null)
+            {
+                throw new NotFoundException($"Assessment with ID {assessmentId} not found");
+            }
+
+            // Check if assessment expired
+            if (assessment.EndDate < DateTime.Now)
+            {
+                throw new AssessmentExpiredException(
+                    "The deadline for this assessment has passed",
+                    assessment.EndDate
+                );
+            }
+
+            // Check if student is enrolled in the class
+            var isEnrolled = await _context.StudentEnrollments
+                .AnyAsync(se => se.StudentId == userId &&
+                               se.ClassId == assessment.ClassId &&
+                               se.Status == EnrollmentStatus.active);
+
+            if (!isEnrolled)
+            {
+                throw new ForbiddenException("You don't have permission to access this assessment");
+            }
+
+            // Get existing user assessment (if any)
+            var userAssessment = await _context.UserAssessments
+                .Include(ua => ua.Answers)
+                    .ThenInclude(a => a.McqOption)
+                .Include(ua => ua.Answers)
+                    .ThenInclude(a => a.File)
+                .FirstOrDefaultAsync(ua => ua.UserId == userId && ua.AssessmentId == assessmentId);
+
+            // Get all questions with options
+            var questions = await _context.Questions
+                .Include(q => q.McqOptions)
+                .Where(q => q.AssessmentId == assessmentId)
+                .OrderBy(q => q.QuestionId)
+                .ToListAsync();
+
+            // Map to DTOs
+            var questionDtos = questions.Select(q =>
+            {
+                var existingAnswer = userAssessment?.Answers.FirstOrDefault(a => a.QuestionId == q.QuestionId);
+
+                AnswerDto? answerDto = null;
+                if (existingAnswer != null)
+                {
+                    answerDto = new AnswerDto();
+
+                    if (q.Type == QuestionType.essay)
+                    {
+                        answerDto.Text = existingAnswer.AnswerText;
+                    }
+                    else if (q.Type == QuestionType.mcq && existingAnswer.McqOption != null)
+                    {
+                        answerDto.Mcq = new McqSelectionDto
+                        {
+                            OptionId = existingAnswer.McqOption.OptionId,
+                            Label = existingAnswer.McqOption.OptionLabel
+                        };
+                    }
+                    else if (q.Type == QuestionType.file && existingAnswer.File != null)
+                    {
+                        answerDto.File = new FileInfoDto
+                        {
+                            FileId = existingAnswer.File.FileId,
+                            Filename = existingAnswer.File.OriginalFilename,
+                            Extension = existingAnswer.File.FileExtension,
+                            Size = existingAnswer.File.FileSize
+                        };
+                    }
+                }
+
+                return new QuestionDto
+                {
+                    Id = q.QuestionId,
+                    Question = q.Content,
+                    AnswerType = q.Type.ToString().ToLower(),
+                    Answer = answerDto,
+                    Options = q.Type == QuestionType.mcq
+                        ? q.McqOptions.Select(o => new McqOptionDto
+                        {
+                            OptionId = o.OptionId,
+                            Label = o.OptionLabel,
+                            Text = o.OptionText
+                        }).ToList()
+                        : null
+                };
+            }).ToList();
+
+            return new AssessmentDetailDto
+            {
+                Assessment = new AssessmentInfoDto
+                {
+                    Id = assessment.AssessmentId,
+                    Title = assessment.Title,
+                    Status = userAssessment?.Status.ToString().ToLower(),
+                    Score = userAssessment?.Score,
+                    UpdatedAt = userAssessment?.UpdatedAt
+                },
+                Questions = questionDtos
+            };
+        }
+
+        public async Task<AssessmentDetailDto> SaveDraftAsync(int assessmentId, int userId, SaveDraftRequest request)
+        {
+            // Get assessment with class info
+            var assessment = await _context.Assessments
+                .Include(a => a.Class)
+                .FirstOrDefaultAsync(a => a.AssessmentId == assessmentId);
+
+            if (assessment == null)
+            {
+                throw new NotFoundException($"Assessment with ID {assessmentId} not found");
+            }
+
+            // Check if assessment expired
+            if (assessment.EndDate < DateTime.Now)
+            {
+                throw new AssessmentExpiredException(
+                    "The deadline for this assessment has passed",
+                    assessment.EndDate
+                );
+            }
+
+            // Check if student is enrolled in the class
+            var isEnrolled = await _context.StudentEnrollments
+                .AnyAsync(se => se.StudentId == userId &&
+                               se.ClassId == assessment.ClassId &&
+                               se.Status == EnrollmentStatus.active);
+
+            if (!isEnrolled)
+            {
+                throw new ForbiddenException("You don't have permission to access this assessment");
+            }
+
+            // Get or create UserAssessment
+            var userAssessment = await _context.UserAssessments
+                .Include(ua => ua.Answers)
+                .FirstOrDefaultAsync(ua => ua.UserId == userId && ua.AssessmentId == assessmentId);
+
+            if (userAssessment == null)
+            {
+                userAssessment = new UserAssessment
+                {
+                    UserId = userId,
+                    AssessmentId = assessmentId,
+                    Status = AssessmentStatus.draft,
+                    CreatedAt = DateTime.Now
+                };
+                _context.UserAssessments.Add(userAssessment);
+                await _context.SaveChangesAsync(); // Save to get UserAssessmentId
+            }
+
+            // Check if assessment was already submitted
+            if (userAssessment.Status == AssessmentStatus.completed || userAssessment.Status == AssessmentStatus.on_review)
+            {
+                throw new AlreadySubmittedException(
+                    "This assessment has already been submitted and cannot be modified",
+                    userAssessment.UpdatedAt ?? userAssessment.CreatedAt,
+                    userAssessment.Status.ToString().ToLower()
+                );
+            }
+
+            // Get all questions for validation
+            var questions = await _context.Questions
+                .Include(q => q.McqOptions)
+                .Where(q => q.AssessmentId == assessmentId)
+                .ToListAsync();
+
+            // Process each answer
+            foreach (var answerInput in request.Answers)
+            {
+                var question = questions.FirstOrDefault(q => q.QuestionId == answerInput.QuestionId);
+                if (question == null)
+                {
+                    throw new NotFoundException($"Question with ID {answerInput.QuestionId} not found");
+                }
+
+                // Validate answer type matches question type
+                var expectedType = question.Type.ToString().ToLower();
+                if (answerInput.AnswerType != expectedType)
+                {
+                    throw new AnswerTypeMismatchException(
+                        $"Answer type for question {question.QuestionId} does not match the question type",
+                        answerInput.QuestionId,
+                        expectedType,
+                        answerInput.AnswerType
+                    );
+                }
+
+                // Get or create answer
+                var answer = userAssessment.Answers.FirstOrDefault(a => a.QuestionId == answerInput.QuestionId);
+                if (answer == null)
+                {
+                    answer = new Answer
+                    {
+                        UserAssessmentId = userAssessment.UserAssessmentId,
+                        QuestionId = answerInput.QuestionId,
+                        CreatedAt = DateTime.Now
+                    };
+                    _context.Answers.Add(answer);
+                }
+
+                // Process based on answer type
+                switch (question.Type)
+                {
+                    case QuestionType.essay:
+                        if (string.IsNullOrWhiteSpace(answerInput.Text))
+                        {
+                            throw new EmptyAnswerException(
+                                $"Essay answer for question {question.QuestionId} cannot be empty",
+                                answerInput.QuestionId,
+                                "essay"
+                            );
+                        }
+                        answer.AnswerText = answerInput.Text;
+                        answer.UpdatedAt = DateTime.Now;
+                        break;
+
+                    case QuestionType.mcq:
+                        if (answerInput.OptionId == null)
+                        {
+                            throw new MissingAnswerDataException(
+                                $"Option ID is required for MCQ question {question.QuestionId}",
+                                answerInput.QuestionId,
+                                "mcq",
+                                "option_id"
+                            );
+                        }
+
+                        // Validate option belongs to question
+                        var option = question.McqOptions.FirstOrDefault(o => o.OptionId == answerInput.OptionId);
+                        if (option == null)
+                        {
+                            var validOptionIds = question.McqOptions.Select(o => o.OptionId).ToList();
+                            throw new InvalidOptionException(
+                                $"Option {answerInput.OptionId} does not belong to question {question.QuestionId}",
+                                answerInput.QuestionId,
+                                answerInput.OptionId.Value,
+                                validOptionIds
+                            );
+                        }
+
+                        answer.SelectedOptionId = answerInput.OptionId;
+                        answer.UpdatedAt = DateTime.Now;
+                        break;
+
+                    case QuestionType.file:
+                        if (answerInput.File == null)
+                        {
+                            throw new MissingAnswerDataException(
+                                $"File is required for file upload question {question.QuestionId}",
+                                answerInput.QuestionId,
+                                "file",
+                                "file"
+                            );
+                        }
+
+                        // Validate file
+                        await _fileService.ValidateFileAsync(answerInput.File, question.QuestionId);
+
+                        // Delete old file if exists
+                        if (answer.FileId != null)
+                        {
+                            await _fileService.DeleteFileAsync(answer.FileId.Value);
+                        }
+
+                        // Save new file
+                        var fileEntity = await _fileService.SaveFileAsync(answerInput.File, userId, assessmentId);
+                        answer.FileId = fileEntity.FileId;
+                        answer.UpdatedAt = DateTime.Now;
+                        break;
+                }
+            }
+
+            // Update user assessment timestamp
+            userAssessment.UpdatedAt = DateTime.Now;
+            userAssessment.Status = AssessmentStatus.draft;
+
+            await _context.SaveChangesAsync();
+
+            // Return updated assessment detail
+            return await GetIncompleteAssessmentDetailAsync(assessmentId, userId);
+        }
+
+        public async Task<AssessmentDetailDto> SubmitAssessmentAsync(int assessmentId, int userId, SaveDraftRequest request)
+        {
+            // Get assessment with class info
+            var assessment = await _context.Assessments
+                .Include(a => a.Class)
+                .FirstOrDefaultAsync(a => a.AssessmentId == assessmentId);
+
+            if (assessment == null)
+            {
+                throw new NotFoundException($"Assessment with ID {assessmentId} not found");
+            }
+
+            // Check if assessment expired
+            if (assessment.EndDate < DateTime.Now)
+            {
+                throw new AssessmentExpiredException(
+                    "The deadline for this assessment has passed",
+                    assessment.EndDate
+                );
+            }
+
+            // Check if student is enrolled in the class
+            var isEnrolled = await _context.StudentEnrollments
+                .AnyAsync(se => se.StudentId == userId &&
+                               se.ClassId == assessment.ClassId &&
+                               se.Status == EnrollmentStatus.active);
+
+            if (!isEnrolled)
+            {
+                throw new ForbiddenException("You don't have permission to access this assessment");
+            }
+
+            // Get or create UserAssessment
+            var userAssessment = await _context.UserAssessments
+                .Include(ua => ua.Answers)
+                .FirstOrDefaultAsync(ua => ua.UserId == userId && ua.AssessmentId == assessmentId);
+
+            if (userAssessment == null)
+            {
+                userAssessment = new UserAssessment
+                {
+                    UserId = userId,
+                    AssessmentId = assessmentId,
+                    Status = AssessmentStatus.draft,
+                    CreatedAt = DateTime.Now
+                };
+                _context.UserAssessments.Add(userAssessment);
+                await _context.SaveChangesAsync(); // Save to get UserAssessmentId
+            }
+
+            // Check if assessment was already submitted
+            if (userAssessment.Status == AssessmentStatus.completed || userAssessment.Status == AssessmentStatus.on_review)
+            {
+                throw new AlreadySubmittedException(
+                    "This assessment has already been submitted and cannot be modified",
+                    userAssessment.UpdatedAt ?? userAssessment.CreatedAt,
+                    userAssessment.Status.ToString().ToLower()
+                );
+            }
+
+            // Get all questions for validation
+            var questions = await _context.Questions
+                .Include(q => q.McqOptions)
+                .Where(q => q.AssessmentId == assessmentId)
+                .ToListAsync();
+
+            // Process each answer (similar to SaveDraft but with strict validation)
+            foreach (var answerInput in request.Answers)
+            {
+                var question = questions.FirstOrDefault(q => q.QuestionId == answerInput.QuestionId);
+                if (question == null)
+                {
+                    throw new NotFoundException($"Question with ID {answerInput.QuestionId} not found");
+                }
+
+                // Validate answer type matches question type
+                var expectedType = question.Type.ToString().ToLower();
+                if (answerInput.AnswerType != expectedType)
+                {
+                    throw new AnswerTypeMismatchException(
+                        $"Answer type for question {question.QuestionId} does not match the question type",
+                        answerInput.QuestionId,
+                        expectedType,
+                        answerInput.AnswerType
+                    );
+                }
+
+                // Get or create answer
+                var answer = userAssessment.Answers.FirstOrDefault(a => a.QuestionId == answerInput.QuestionId);
+                if (answer == null)
+                {
+                    answer = new Answer
+                    {
+                        UserAssessmentId = userAssessment.UserAssessmentId,
+                        QuestionId = answerInput.QuestionId,
+                        CreatedAt = DateTime.Now
+                    };
+                    _context.Answers.Add(answer);
+                }
+
+                // Process based on answer type (with strict validation for submit)
+                switch (question.Type)
+                {
+                    case QuestionType.essay:
+                        if (string.IsNullOrWhiteSpace(answerInput.Text))
+                        {
+                            throw new EmptyAnswerException(
+                                $"Essay answer for question {question.QuestionId} cannot be empty",
+                                answerInput.QuestionId,
+                                "essay"
+                            );
+                        }
+                        answer.AnswerText = answerInput.Text;
+                        answer.UpdatedAt = DateTime.Now;
+                        break;
+
+                    case QuestionType.mcq:
+                        if (answerInput.OptionId == null)
+                        {
+                            throw new MissingAnswerDataException(
+                                $"Option ID is required for MCQ question {question.QuestionId}",
+                                answerInput.QuestionId,
+                                "mcq",
+                                "option_id"
+                            );
+                        }
+
+                        // Validate option belongs to question
+                        var option = question.McqOptions.FirstOrDefault(o => o.OptionId == answerInput.OptionId);
+                        if (option == null)
+                        {
+                            var validOptionIds = question.McqOptions.Select(o => o.OptionId).ToList();
+                            throw new InvalidOptionException(
+                                $"Option {answerInput.OptionId} does not belong to question {question.QuestionId}",
+                                answerInput.QuestionId,
+                                answerInput.OptionId.Value,
+                                validOptionIds
+                            );
+                        }
+
+                        answer.SelectedOptionId = answerInput.OptionId;
+                        answer.UpdatedAt = DateTime.Now;
+                        break;
+
+                    case QuestionType.file:
+                        if (answerInput.File == null)
+                        {
+                            throw new MissingAnswerDataException(
+                                $"File is required for file upload question {question.QuestionId}",
+                                answerInput.QuestionId,
+                                "file",
+                                "file"
+                            );
+                        }
+
+                        // Validate file
+                        await _fileService.ValidateFileAsync(answerInput.File, question.QuestionId);
+
+                        // Delete old file if exists
+                        if (answer.FileId != null)
+                        {
+                            await _fileService.DeleteFileAsync(answer.FileId.Value);
+                        }
+
+                        // Save new file
+                        var fileEntity = await _fileService.SaveFileAsync(answerInput.File, userId, assessmentId);
+                        answer.FileId = fileEntity.FileId;
+                        answer.UpdatedAt = DateTime.Now;
+                        break;
+                }
+            }
+
+            // Ensure all questions are answered
+            var answeredQuestionIds = request.Answers.Select(a => a.QuestionId).ToHashSet();
+            var allQuestionIds = questions.Select(q => q.QuestionId).ToList();
+            var unansweredQuestions = allQuestionIds.Where(id => !answeredQuestionIds.Contains(id)).ToList();
+
+            if (unansweredQuestions.Any())
+            {
+                throw new IncompleteAssessmentException(
+                    "All questions must be answered before submission",
+                    allQuestionIds.Count,
+                    answeredQuestionIds.Count,
+                    unansweredQuestions
+                );
+            }
+
+            // Calculate score for MCQ questions and determine status
+            var mcqQuestions = questions.Where(q => q.Type == QuestionType.mcq).ToList();
+            var hasNonMcqQuestions = questions.Any(q => q.Type != QuestionType.mcq);
+
+            int? calculatedScore = null;
+            if (mcqQuestions.Any())
+            {
+                var correctAnswers = 0;
+                foreach (var mcqQuestion in mcqQuestions)
+                {
+                    var answer = userAssessment.Answers.FirstOrDefault(a => a.QuestionId == mcqQuestion.QuestionId);
+                    if (answer?.SelectedOptionId != null)
+                    {
+                        var selectedOption = mcqQuestion.McqOptions.FirstOrDefault(o => o.OptionId == answer.SelectedOptionId);
+                        if (selectedOption?.IsCorrect == true)
+                        {
+                            correctAnswers++;
+                        }
+                    }
+                }
+
+                // Calculate percentage score
+                calculatedScore = (int)Math.Round((double)correctAnswers / questions.Count * 100);
+            }
+
+            // Set status based on question types
+            if (hasNonMcqQuestions)
+            {
+                // Has essay or file questions - needs manual review
+                userAssessment.Status = AssessmentStatus.on_review;
+                userAssessment.Score = calculatedScore; // Partial score for MCQ if any
+            }
+            else
+            {
+                // Only MCQ questions - auto-complete
+                userAssessment.Status = AssessmentStatus.completed;
+                userAssessment.Score = calculatedScore;
+            }
+
+            userAssessment.UpdatedAt = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+
+            // Return updated assessment detail
+            return await GetIncompleteAssessmentDetailAsync(assessmentId, userId);
+        }
+
+        public async Task<ApiResponse<List<CompletedAssessmentDto>>> GetCompletedAssessmentsAsync(
+            int userId, int page, int size, string? semester)
+        {
+            // Get student's enrolled class IDs
+            var enrolledClassIds = await _context.StudentEnrollments
+                .Where(se => se.StudentId == userId && se.Status == EnrollmentStatus.active)
+                .Select(se => se.ClassId)
+                .ToListAsync();
+
+            // Get completed assessment IDs for this user
+            var completedUserAssessments = await _context.UserAssessments
+                .Where(ua => ua.UserId == userId && ua.Status == AssessmentStatus.completed)
+                .ToListAsync();
+
+            var completedAssessmentIds = completedUserAssessments.Select(ua => ua.AssessmentId).ToList();
+
+            // Build query for assessments
+            var query = _context.Assessments
+                .Include(a => a.Class)
+                    .ThenInclude(c => c.Lecturer)
+                        .ThenInclude(l => l.User)
+                .Include(a => a.Class)
+                    .ThenInclude(c => c.Course)
+                .Include(a => a.Class)
+                    .ThenInclude(c => c.AcademicTerm)
+                .Where(a => enrolledClassIds.Contains(a.ClassId) && completedAssessmentIds.Contains(a.AssessmentId));
+
+            // Apply semester filter if provided
+            if (!string.IsNullOrEmpty(semester))
+            {
+                if (int.TryParse(semester, out int semesterId))
+                {
+                    query = query.Where(a => a.Class.AcademicTermId == semesterId);
+                }
+            }
+
+            // Calculate pagination
+            var totalItem = await query.CountAsync();
+            var totalPage = (int)Math.Ceiling(totalItem / (double)size);
+
+            // Get paginated data
+            var assessments = await query
+                .OrderByDescending(a => a.EndDate)
+                .Skip((page - 1) * size)
+                .Take(size)
+                .ToListAsync();
+
+            var result = assessments.Select(a =>
+            {
+                var userAssessment = completedUserAssessments.First(ua => ua.AssessmentId == a.AssessmentId);
+                return new CompletedAssessmentDto
+                {
+                    Id = a.AssessmentId,
+                    Name = a.Title,
+                    Class = a.Class.ClassCode,
+                    LecturerName = a.Class.Lecturer.User.Name,
+                    StartDate = a.StartDate,
+                    EndDate = a.EndDate,
+                    Status = userAssessment.Status.ToString().ToLower(),
+                    Score = userAssessment.Score,
+                    SubmittedAt = userAssessment.UpdatedAt
+                };
+            }).ToList();
+
+            return new ApiResponse<List<CompletedAssessmentDto>>
+            {
+                Data = result,
+                Paging = new PagingDto
+                {
+                    Page = page,
+                    Size = size,
+                    TotalItem = totalItem,
+                    TotalPage = totalPage
+                },
+                Success = true
+            };
+        }
+
+        public async Task<AssessmentDetailDto> GetCompletedAssessmentDetailAsync(int assessmentId, int userId)
+        {
+            // Get assessment with class info
+            var assessment = await _context.Assessments
+                .Include(a => a.Class)
+                .FirstOrDefaultAsync(a => a.AssessmentId == assessmentId);
+
+            if (assessment == null)
+            {
+                throw new NotFoundException($"Assessment with ID {assessmentId} not found");
+            }
+
+            // Check if student is enrolled in the class
+            var isEnrolled = await _context.StudentEnrollments
+                .AnyAsync(se => se.StudentId == userId &&
+                               se.ClassId == assessment.ClassId &&
+                               se.Status == EnrollmentStatus.active);
+
+            if (!isEnrolled)
+            {
+                throw new ForbiddenException("You don't have permission to access this assessment");
+            }
+
+            // Get user assessment (must be completed)
+            var userAssessment = await _context.UserAssessments
+                .Include(ua => ua.Answers)
+                    .ThenInclude(a => a.McqOption)
+                .Include(ua => ua.Answers)
+                    .ThenInclude(a => a.File)
+                .FirstOrDefaultAsync(ua => ua.UserId == userId && 
+                                          ua.AssessmentId == assessmentId && 
+                                          ua.Status == AssessmentStatus.completed);
+
+            if (userAssessment == null)
+            {
+                throw new NotFoundException($"Completed assessment with ID {assessmentId} not found for this user");
+            }
+
+            // Get all questions with options
+            var questions = await _context.Questions
+                .Include(q => q.McqOptions)
+                .Where(q => q.AssessmentId == assessmentId)
+                .OrderBy(q => q.QuestionId)
+                .ToListAsync();
+
+            // Map to DTOs (similar to incomplete but read-only)
+            var questionDtos = questions.Select(q =>
+            {
+                var existingAnswer = userAssessment.Answers.FirstOrDefault(a => a.QuestionId == q.QuestionId);
+
+                AnswerDto? answerDto = null;
+                if (existingAnswer != null)
+                {
+                    answerDto = new AnswerDto();
+
+                    if (q.Type == QuestionType.essay)
+                    {
+                        answerDto.Text = existingAnswer.AnswerText;
+                    }
+                    else if (q.Type == QuestionType.mcq && existingAnswer.McqOption != null)
+                    {
+                        answerDto.Mcq = new McqSelectionDto
+                        {
+                            OptionId = existingAnswer.McqOption.OptionId,
+                            Label = existingAnswer.McqOption.OptionLabel
+                        };
+                    }
+                    else if (q.Type == QuestionType.file && existingAnswer.File != null)
+                    {
+                        answerDto.File = new FileInfoDto
+                        {
+                            FileId = existingAnswer.File.FileId,
+                            Filename = existingAnswer.File.OriginalFilename,
+                            Extension = existingAnswer.File.FileExtension,
+                            Size = existingAnswer.File.FileSize
+                        };
+                    }
+                }
+
+                return new QuestionDto
+                {
+                    Id = q.QuestionId,
+                    Question = q.Content,
+                    AnswerType = q.Type.ToString().ToLower(),
+                    Answer = answerDto,
+                    Options = q.Type == QuestionType.mcq
+                        ? q.McqOptions.Select(o => new McqOptionDto
+                        {
+                            OptionId = o.OptionId,
+                            Label = o.OptionLabel,
+                            Text = o.OptionText
+                        }).ToList()
+                        : null
+                };
+            }).ToList();
+
+            return new AssessmentDetailDto
+            {
+                Assessment = new AssessmentInfoDto
+                {
+                    Id = assessment.AssessmentId,
+                    Title = assessment.Title,
+                    Status = userAssessment.Status.ToString().ToLower(),
+                    Score = userAssessment.Score,
+                    UpdatedAt = userAssessment.UpdatedAt
+                },
+                Questions = questionDtos
+            };
+        }
+    }
+}

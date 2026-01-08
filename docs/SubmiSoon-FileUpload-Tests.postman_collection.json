@@ -1,0 +1,465 @@
+{
+	"info": {
+		"_postman_id": "fef420b1-2260-46cc-93b9-3382e6a47e23",
+		"name": "SubmiSoon File Upload Tests",
+		"description": "File upload test collection for SubmiSoon assessment submission system.\n\n**Base URL:** http://localhost:5002\n\n**Prerequisites:**\n1. Backend application running\n2. Login first to get auth token\n3. Create test files before running:\n   - test.pdf (< 2MB)\n   - large-file.pdf (> 2MB)\n   - test.exe (invalid type)\n   - test.jpg (< 2MB)\n\n**Note:** These tests require multipart/form-data file uploads.\nRun these tests AFTER the main API test collection.\n\n**Created:** January 4, 2026\n**Updated:** January 8, 2026\n**Author:** SubmiSoon Dev Team",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{authToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5002",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "assessmentId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "fileQuestionId",
+			"value": "3",
+			"type": "string",
+			"description": "Question ID for file-type question (update after checking assessment detail)"
+		}
+	],
+	"item": [
+		{
+			"name": "Setup",
+			"item": [
+				{
+					"name": "Login (Get Token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Save token\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"authToken\", jsonData.accessToken);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"tisha.jillian@sunib.ac.id\",\n  \"password\": \"password2k25\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login to get authentication token. Run this first!"
+					},
+					"response": []
+				}
+			],
+			"description": "Setup tests - run these first"
+		},
+		{
+			"name": "File Upload Tests",
+			"item": [
+				{
+					"name": "Upload Valid PDF File",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"File uploaded successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.assessment.status).to.eql('draft');",
+									"});",
+									"",
+									"pm.test(\"Response includes file info\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var fileQuestion = jsonData.data.questions.find(q => q.answerType === 'file');",
+									"    if (fileQuestion && fileQuestion.answer) {",
+									"        pm.expect(fileQuestion.answer.file).to.have.property('fileId');",
+									"        pm.expect(fileQuestion.answer.file).to.have.property('filename');",
+									"        pm.expect(fileQuestion.answer.file).to.have.property('size');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "answers[0].question_id",
+									"value": "{{fileQuestionId}}",
+									"type": "text",
+									"description": "File question ID - update with actual value"
+								},
+								{
+									"key": "answers[0].answer_type",
+									"value": "file",
+									"type": "text"
+								},
+								{
+									"key": "answers[0].file",
+									"type": "file",
+									"src": [],
+									"description": "Select test.pdf file (< 2MB)"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/assessments/incomplete/{{assessmentId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"incomplete",
+								"{{assessmentId}}"
+							]
+						},
+						"description": "TC-FILE-001: Upload a valid PDF file.\n\nPrerequisites:\n1. Create test.pdf file (< 2MB)\n2. Update {{fileQuestionId}} with actual file question ID\n3. Select the test.pdf file in the file field\n\nExpected: Status 200, file saved, response includes file metadata"
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Invalid File Type (400)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error code is INVALID_FILE_TYPE\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error.code).to.eql('INVALID_FILE_TYPE');",
+									"});",
+									"",
+									"pm.test(\"Error shows allowed extensions\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error.details).to.have.property('allowedExtensions');",
+									"    pm.expect(jsonData.error.details.allowedExtensions).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "answers[0].question_id",
+									"value": "{{fileQuestionId}}",
+									"type": "text"
+								},
+								{
+									"key": "answers[0].answer_type",
+									"value": "file",
+									"type": "text"
+								},
+								{
+									"key": "answers[0].file",
+									"type": "file",
+									"src": [],
+									"description": "Select test.exe file (invalid type)"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/assessments/incomplete/{{assessmentId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"incomplete",
+								"{{assessmentId}}"
+							]
+						},
+						"description": "TC-FILE-002: Attempt to upload invalid file type.\n\nPrerequisites:\n1. Create test.exe file\n2. Select the test.exe file\n\nExpected: Status 400, INVALID_FILE_TYPE error, shows allowed extensions"
+					},
+					"response": []
+				},
+				{
+					"name": "Upload File Exceeding Size Limit (413)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 413\", function () {",
+									"    pm.response.to.have.status(413);",
+									"});",
+									"",
+									"pm.test(\"Error code is FILE_TOO_LARGE\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error.code).to.eql('FILE_TOO_LARGE');",
+									"});",
+									"",
+									"pm.test(\"Error shows file size and max size\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error.details).to.have.property('fileSize');",
+									"    pm.expect(jsonData.error.details).to.have.property('maxSize');",
+									"    pm.expect(jsonData.error.details.maxSize).to.eql(2097152); // 2MB",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "answers[0].question_id",
+									"value": "{{fileQuestionId}}",
+									"type": "text"
+								},
+								{
+									"key": "answers[0].answer_type",
+									"value": "file",
+									"type": "text"
+								},
+								{
+									"key": "answers[0].file",
+									"type": "file",
+									"src": [],
+									"description": "Select large-file.pdf (> 2MB)"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/assessments/incomplete/{{assessmentId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"incomplete",
+								"{{assessmentId}}"
+							]
+						},
+						"description": "TC-FILE-003: Attempt to upload file exceeding 2MB limit.\n\nPrerequisites:\n1. Create large-file.pdf (> 2MB, e.g., 3MB)\n2. Select the large-file.pdf\n\nExpected: Status 413, FILE_TOO_LARGE error, shows file size and max size"
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Valid Image (.jpg)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Image uploaded successfully\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.assessment.status).to.eql('draft');",
+									"});",
+									"",
+									"pm.test(\"File extension is preserved\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var fileQuestion = jsonData.data.questions.find(q => q.answerType === 'file');",
+									"    if (fileQuestion && fileQuestion.answer) {",
+									"        pm.expect(fileQuestion.answer.file.extension).to.satisfy(function(ext) {",
+									"            return ext === 'jpg' || ext === '.jpg' || ext === 'jpeg' || ext === '.jpeg';",
+									"        });",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "answers[0].question_id",
+									"value": "{{fileQuestionId}}",
+									"type": "text"
+								},
+								{
+									"key": "answers[0].answer_type",
+									"value": "file",
+									"type": "text"
+								},
+								{
+									"key": "answers[0].file",
+									"type": "file",
+									"src": [],
+									"description": "Select test.jpg file (< 2MB)"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/assessments/incomplete/{{assessmentId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"incomplete",
+								"{{assessmentId}}"
+							]
+						},
+						"description": "TC-FILE-004: Upload a valid image file.\n\nPrerequisites:\n1. Create test.jpg file (< 2MB)\n2. Select the test.jpg file\n\nExpected: Status 200, image saved, file extension preserved"
+					},
+					"response": []
+				},
+				{
+					"name": "Replace Existing File",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"New file replaced old file\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var fileQuestion = jsonData.data.questions.find(q => q.answerType === 'file');",
+									"    if (fileQuestion && fileQuestion.answer) {",
+									"        pm.expect(fileQuestion.answer.file).to.have.property('fileId');",
+									"        // File ID should be different from previous upload",
+									"        // Note: You may need to save previous fileId to verify",
+									"    }",
+									"});",
+									"",
+									"pm.test(\"Updated timestamp changed\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.assessment.updatedAt).to.not.be.null;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "answers[0].question_id",
+									"value": "{{fileQuestionId}}",
+									"type": "text"
+								},
+								{
+									"key": "answers[0].answer_type",
+									"value": "file",
+									"type": "text"
+								},
+								{
+									"key": "answers[0].file",
+									"type": "file",
+									"src": [],
+									"description": "Select a different file (e.g., test2.pdf)"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/assessments/incomplete/{{assessmentId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"incomplete",
+								"{{assessmentId}}"
+							]
+						},
+						"description": "TC-FILE-005: Replace an existing file upload.\n\nPrerequisites:\n1. Run 'Upload Valid PDF File' test first\n2. Select a different file (test2.pdf)\n\nExpected: Status 200, new file replaces old file, old file deleted from storage"
+					},
+					"response": []
+				}
+			],
+			"description": "File upload tests with validation"
+		},
+		{
+			"name": "Notes and Instructions",
+			"item": [
+				{
+					"name": "READ ME - Test File Preparation",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://example.com",
+							"protocol": "http",
+							"host": [
+								"example",
+								"com"
+							]
+						},
+						"description": "# Test File Preparation Guide\n\n## Files Needed\n\nBefore running these tests, prepare the following test files:\n\n### 1. test.pdf (< 2MB)\n- **Purpose:** Valid PDF upload test\n- **Size:** Less than 2MB (e.g., 500KB - 1.5MB)\n- **How to create:** \n  - Use any text editor to create a simple document\n  - Save as PDF\n  - Ensure size is under 2MB\n\n### 2. large-file.pdf (> 2MB)\n- **Purpose:** File size validation test\n- **Size:** More than 2MB (e.g., 3MB - 5MB)\n- **How to create:**\n  - Create a large document with images\n  - Or combine multiple PDFs\n  - Ensure size exceeds 2MB\n\n### 3. test.exe (any size)\n- **Purpose:** Invalid file type test\n- **Type:** Executable file (.exe)\n- **How to create:**\n  - Rename any file to test.exe\n  - Or create a simple text file and rename it\n\n### 4. test.jpg (< 2MB)\n- **Purpose:** Valid image upload test\n- **Size:** Less than 2MB\n- **How to create:**\n  - Use any image file\n  - Resize if necessary to be under 2MB\n\n### 5. test2.pdf (< 2MB)\n- **Purpose:** File replacement test\n- **Size:** Less than 2MB\n- **Content:** Should be different from test.pdf\n\n---\n\n## Configuration Steps\n\n### 1. Update Collection Variables\n- **assessmentId:** Check which assessment has file-type questions\n- **fileQuestionId:** Get the actual question ID from assessment detail endpoint\n\n### 2. Run Tests in Order\n1. Login (Get Token)\n2. Upload Valid PDF File\n3. Upload Invalid File Type (400)\n4. Upload File Exceeding Size Limit (413)\n5. Upload Valid Image (.jpg)\n6. Replace Existing File\n\n---\n\n## Troubleshooting\n\n### No file-type questions in seed data?\n- You may need to manually add a file-type question to the database\n- Or modify an existing question type to 'file'\n\n### File not uploading?\n- Check file path is correct\n- Ensure file is not locked by another program\n- Verify file size is within limits\n\n### Getting 404 errors?\n- Verify assessmentId is correct\n- Ensure you're logged in as a student enrolled in that class\n\n---\n\n## Expected File Storage Location\n\nFiles should be saved to:\n```\n/wwwroot/uploads/{assessmentId}/{userId}/{guid}_{timestamp}{extension}\n```\n\nExample:\n```\n/wwwroot/uploads/1/1/abc123_20260104150030.pdf\n```"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

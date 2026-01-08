@@ -1,0 +1,22 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost;Database=SubmiSoonDb;Trusted_Connection=True;TrustServerCertificate=True;"
+  },
+  "Jwt": {
+    "Key": "REPLACE_WITH_YOUR_SECRET_KEY_MIN_64_CHARS_HEX_STRING",
+    "Issuer": "SubmiSoonAPI",
+    "Audience": "SubmiSoonClient",
+    "ExpiresInMinutes": 60
+  },
+  "UrlSigning": {
+    "SecretKey": "REPLACE_WITH_YOUR_SECRET_KEY_MIN_128_CHARS_HEX_STRING",
+    "DefaultExpirationMinutes": 3
+  },
+  "AllowedHosts": "*"
+}

@@ -1,0 +1,1813 @@
+{
+	"info": {
+		"_postman_id": "e248cbfa-a722-46a8-aec1-40b8a409ce1c",
+		"name": "SubmiSoon Backend API Tests",
+		"description": "Complete test collection for SubmiSoon assessment submission system.\n\n**Base URL:** http://localhost:5002\n\n**Test Users:**\n- Student 1: tisha.jillian@sunib.ac.id / password2k25\n- Student 2: alice@sunib.ac.id / password999\n- Lecturer 1: jane.smith@sunib.edu / password123\n\n**How to Use:**\n1. Start the backend application: `dotnet run`\n2. Run the Login request first to get token\n3. Token will be auto-saved to environment\n4. Run other requests in any order\n\n**Updates (Jan 8, 2026):**\n- Updated baseUrl to port 5002\n- Updated _postman_id with unique UUID for proper collection management\n- Added 5 new tests (31 total)\n- Added Alice login for cross-student tests\n- Added 3 new collection variables (aliceEmail, alicePassword, aliceToken)\n- 100% test case coverage from TESTING.md\n\n**Created:** January 4, 2026\n**Updated:** January 8, 2026\n**Author:** SubmiSoon Dev Team",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{authToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5002",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "studentEmail",
+			"value": "tisha.jillian@sunib.ac.id",
+			"type": "string"
+		},
+		{
+			"key": "studentPassword",
+			"value": "password2k25",
+			"type": "string"
+		},
+		{
+			"key": "assessmentId",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "aliceEmail",
+			"value": "alice@sunib.ac.id",
+			"type": "string"
+		},
+		{
+			"key": "alicePassword",
+			"value": "password999",
+			"type": "string"
+		},
+		{
+			"key": "aliceToken",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "01 - Authentication",
+			"item": [
+				{
+					"name": "Login - Valid Credentials (Student)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has access token\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('accessToken');",
+									"    pm.expect(jsonData.accessToken).to.be.a('string');",
+									"    ",
+									"    // Save token to environment",
+									"    pm.collectionVariables.set(\"authToken\", jsonData.accessToken);",
+									"});",
+									"",
+									"pm.test(\"Response has user info\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.user).to.have.property('name');",
+									"    pm.expect(jsonData.user).to.have.property('email');",
+									"    pm.expect(jsonData.user).to.have.property('role');",
+									"    pm.expect(jsonData.user.role).to.eql('student');",
+									"});",
+									"",
+									"pm.test(\"Response has success flag\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{studentEmail}}\",\n  \"password\": \"{{studentPassword}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login with valid student credentials. Token will be automatically saved to collection variables."
+					},
+					"response": []
+				},
+				{
+					"name": "Login as Alice (For Cross-Student Tests)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Save Alice's token\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"aliceToken\", jsonData.accessToken);",
+									"});",
+									"",
+									"pm.test(\"User is Alice\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.user.email).to.eql('alice@sunib.ac.id');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{aliceEmail}}\",\n  \"password\": \"{{alicePassword}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login as Alice (Student 2) for cross-student access tests. Token saved to {{aliceToken}}."
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Invalid Password",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test(\"Response has error message\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.false;",
+									"    pm.expect(jsonData.message).to.include('Invalid');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{studentEmail}}\",\n  \"password\": \"wrongpassword\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Attempt login with incorrect password. Should return 401."
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Non-existent Email",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test(\"No information leak\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.message).to.not.include('not found');",
+									"    pm.expect(jsonData.message).to.not.include('does not exist');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"nonexistent@example.com\",\n  \"password\": \"password123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Attempt login with non-existent email. Should not reveal user existence."
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Logout successful\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/logout",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"logout"
+							]
+						},
+						"description": "Logout current user session."
+					},
+					"response": []
+				}
+			],
+			"description": "Authentication and authorization tests"
+		},
+		{
+			"name": "02 - Leaderboard",
+			"item": [
+				{
+					"name": "Get Leaderboard - Default",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has data array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Response has paging info\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.paging).to.have.property('page');",
+									"    pm.expect(jsonData.paging).to.have.property('size');",
+									"    pm.expect(jsonData.paging).to.have.property('totalItem');",
+									"    pm.expect(jsonData.paging).to.have.property('totalPage');",
+									"});",
+									"",
+									"pm.test(\"Each student has required fields\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data.length > 0) {",
+									"        var student = jsonData.data[0];",
+									"        pm.expect(student).to.have.property('name');",
+									"        pm.expect(student).to.have.property('totalAssessmentsDone');",
+									"        pm.expect(student).to.have.property('totalAssessmentsRemaining');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/leaderboard",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"leaderboard"
+							]
+						},
+						"description": "Get leaderboard with default pagination (page 1, size 10)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Leaderboard - Paginated",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Page size is correct\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.paging.size).to.eql(1);",
+									"    pm.expect(jsonData.data.length).to.be.at.most(1);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/leaderboard?page=1&size=1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"leaderboard"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "size",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Get leaderboard with custom page size"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Leaderboard - Sort by Name Ascending",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Results are sorted by name\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data.length > 1) {",
+									"        for (let i = 0; i < jsonData.data.length - 1; i++) {",
+									"            pm.expect(jsonData.data[i].name.localeCompare(jsonData.data[i+1].name)).to.be.at.most(0);",
+									"        }",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/leaderboard?sort_by=name&sort_order=asc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"leaderboard"
+							],
+							"query": [
+								{
+									"key": "sort_by",
+									"value": "name"
+								},
+								{
+									"key": "sort_order",
+									"value": "asc"
+								}
+							]
+						},
+						"description": "Get leaderboard sorted alphabetically by name"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Leaderboard - Sort by Assessment Descending",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Results are sorted by assessments done\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data.length > 1) {",
+									"        for (let i = 0; i < jsonData.data.length - 1; i++) {",
+									"            pm.expect(jsonData.data[i].totalAssessmentsDone).to.be.at.least(jsonData.data[i+1].totalAssessmentsDone);",
+									"        }",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/leaderboard?sort_by=assessment&sort_order=desc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"leaderboard"
+							],
+							"query": [
+								{
+									"key": "sort_by",
+									"value": "assessment"
+								},
+								{
+									"key": "sort_order",
+									"value": "desc"
+								}
+							]
+						},
+						"description": "Get leaderboard sorted by total assessments done (highest first)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Leaderboard - No Auth Token (401)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/leaderboard",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"leaderboard"
+							]
+						},
+						"description": "Attempt to access leaderboard without authentication. Should return 401."
+					},
+					"response": []
+				}
+			],
+			"description": "Leaderboard functionality tests"
+		},
+		{
+			"name": "03 - Incomplete Assessments",
+			"item": [
+				{
+					"name": "List Incomplete Assessments - Default",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has data and paging\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData).to.have.property('paging');",
+									"});",
+									"",
+									"pm.test(\"Each assessment has required fields\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data.length > 0) {",
+									"        var assessment = jsonData.data[0];",
+									"        pm.expect(assessment).to.have.property('id');",
+									"        pm.expect(assessment).to.have.property('name');",
+									"        pm.expect(assessment).to.have.property('class');",
+									"        pm.expect(assessment).to.have.property('lecturerName');",
+									"        pm.expect(assessment).to.have.property('startDate');",
+									"        pm.expect(assessment).to.have.property('endDate');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/incomplete",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"incomplete"
+							]
+						},
+						"description": "Get all incomplete assessments for authenticated student"
+					},
+					"response": []
+				},
+				{
+					"name": "List Incomplete Assessments - Paginated",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Page size is correct\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.paging.size).to.eql(1);",
+									"    pm.expect(jsonData.data.length).to.be.at.most(1);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/incomplete?page=1&size=1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"incomplete"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "size",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Get incomplete assessments with pagination"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Assessment Detail - First Time (No Draft)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has assessment and questions\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('assessment');",
+									"    pm.expect(jsonData.data).to.have.property('questions');",
+									"    pm.expect(jsonData.data.questions).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Assessment status is null (first time)\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.assessment.status).to.be.null;",
+									"});",
+									"",
+									"pm.test(\"All answers are null (no draft)\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    jsonData.data.questions.forEach(function(q) {",
+									"        pm.expect(q.answer).to.be.null;",
+									"    });",
+									"});",
+									"",
+									"pm.test(\"MCQ questions have options\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var mcqQuestions = jsonData.data.questions.filter(q => q.answerType === 'mcq');",
+									"    mcqQuestions.forEach(function(q) {",
+									"        pm.expect(q.options).to.be.an('array');",
+									"        pm.expect(q.options.length).to.be.above(0);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/incomplete/{{assessmentId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"incomplete",
+								"{{assessmentId}}"
+							]
+						},
+						"description": "Get assessment detail for the first time (no draft saved yet)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Assessment Detail - Non-existent ID (404)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test(\"Error code is correct\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error.code).to.eql('ASSESSMENT_NOT_FOUND');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/incomplete/9999",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"incomplete",
+								"9999"
+							]
+						},
+						"description": "Attempt to get non-existent assessment. Should return 404."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Assessment Detail - Not Enrolled (403)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 403\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});",
+									"",
+									"pm.test(\"Error code is ACCESS_DENIED\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error.code).to.eql('ACCESS_DENIED');",
+									"});",
+									"",
+									"pm.test(\"Error message mentions permission\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error.message).to.include('permission');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{aliceToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/incomplete/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"incomplete",
+								"1"
+							]
+						},
+						"description": "Attempt to access assessment for a class the student is not enrolled in. Prerequisites: Run 'Login as Alice' first. Should return 403 Forbidden."
+					},
+					"response": []
+				}
+			],
+			"description": "Incomplete assessments list and detail tests"
+		},
+		{
+			"name": "04 - Save Draft",
+			"item": [
+				{
+					"name": "Save Draft - Essay Answer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Status changed to draft\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.assessment.status).to.eql('draft');",
+									"});",
+									"",
+									"pm.test(\"UpdatedAt is present\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.assessment.updatedAt).to.not.be.null;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "answers[0].question_id",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "answers[0].answer_type",
+									"value": "essay",
+									"type": "text"
+								},
+								{
+									"key": "answers[0].text",
+									"value": "Object-oriented programming (OOP) is a programming paradigm based on the concept of objects, which can contain data in the form of fields (attributes or properties) and code in the form of procedures (methods or functions). OOP focuses on organizing software design around data, or objects, rather than functions and logic.",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/assessments/incomplete/{{assessmentId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"incomplete",
+								"{{assessmentId}}"
+							]
+						},
+						"description": "Save a draft answer for an essay question"
+					},
+					"response": []
+				},
+				{
+					"name": "Save Draft - MCQ Answer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"MCQ answer saved\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var mcqQuestion = jsonData.data.questions.find(q => q.answerType === 'mcq');",
+									"    if (mcqQuestion && mcqQuestion.answer) {",
+									"        pm.expect(mcqQuestion.answer.mcq).to.have.property('optionId');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "answers[0].question_id",
+									"value": "2",
+									"type": "text",
+									"description": "MCQ question ID - get from assessment detail"
+								},
+								{
+									"key": "answers[0].answer_type",
+									"value": "mcq",
+									"type": "text"
+								},
+								{
+									"key": "answers[0].option_id",
+									"value": "1",
+									"type": "text",
+									"description": "Option ID - get from assessment detail response"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/assessments/incomplete/{{assessmentId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"incomplete",
+								"{{assessmentId}}"
+							]
+						},
+						"description": "Save a draft answer for an MCQ question. Update the option_id with actual value from GET response."
+					},
+					"response": []
+				},
+				{
+					"name": "Save Draft - Multiple Answers",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Both answers saved\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var answeredCount = jsonData.data.questions.filter(q => q.answer !== null).length;",
+									"    pm.expect(answeredCount).to.be.at.least(2);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "answers[0].question_id",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "answers[0].answer_type",
+									"value": "essay",
+									"type": "text"
+								},
+								{
+									"key": "answers[0].text",
+									"value": "Updated essay answer with more details about OOP principles.",
+									"type": "text"
+								},
+								{
+									"key": "answers[1].question_id",
+									"value": "2",
+									"type": "text"
+								},
+								{
+									"key": "answers[1].answer_type",
+									"value": "mcq",
+									"type": "text"
+								},
+								{
+									"key": "answers[1].option_id",
+									"value": "1",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/assessments/incomplete/{{assessmentId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"incomplete",
+								"{{assessmentId}}"
+							]
+						},
+						"description": "Save multiple answers at once"
+					},
+					"response": []
+				},
+				{
+					"name": "Save Draft - Empty Essay (400)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error code is EMPTY_ANSWER\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error.code).to.eql('EMPTY_ANSWER');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "answers[0].question_id",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "answers[0].answer_type",
+									"value": "essay",
+									"type": "text"
+								},
+								{
+									"key": "answers[0].text",
+									"value": "",
+									"type": "text",
+									"description": "Empty text - should fail"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/assessments/incomplete/{{assessmentId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"incomplete",
+								"{{assessmentId}}"
+							]
+						},
+						"description": "Attempt to save empty essay answer. Should return 400 with EMPTY_ANSWER error."
+					},
+					"response": []
+				},
+				{
+					"name": "Save Draft - Invalid Option ID (400)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error code is INVALID_OPTION\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error.code).to.eql('INVALID_OPTION');",
+									"});",
+									"",
+									"pm.test(\"Error details show valid options\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error.details).to.have.property('validOptionIds');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "answers[0].question_id",
+									"value": "2",
+									"type": "text"
+								},
+								{
+									"key": "answers[0].answer_type",
+									"value": "mcq",
+									"type": "text"
+								},
+								{
+									"key": "answers[0].option_id",
+									"value": "9999",
+									"type": "text",
+									"description": "Invalid option ID"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/assessments/incomplete/{{assessmentId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"incomplete",
+								"{{assessmentId}}"
+							]
+						},
+						"description": "Attempt to save MCQ answer with invalid option ID. Should return 400."
+					},
+					"response": []
+				},
+				{
+					"name": "Save Draft - Wrong Answer Type (400)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error code is ANSWER_TYPE_MISMATCH\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error.code).to.eql('ANSWER_TYPE_MISMATCH');",
+									"});",
+									"",
+									"pm.test(\"Error shows expected and received types\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error.details).to.have.property('expectedType');",
+									"    pm.expect(jsonData.error.details).to.have.property('receivedType');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "answers[0].question_id",
+									"value": "1",
+									"type": "text",
+									"description": "Essay question"
+								},
+								{
+									"key": "answers[0].answer_type",
+									"value": "mcq",
+									"type": "text",
+									"description": "Wrong type - question is essay"
+								},
+								{
+									"key": "answers[0].option_id",
+									"value": "1",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/assessments/incomplete/{{assessmentId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"incomplete",
+								"{{assessmentId}}"
+							]
+						},
+						"description": "Attempt to save MCQ answer for essay question. Should return 400."
+					},
+					"response": []
+				}
+			],
+			"description": "Save draft functionality tests with validation"
+		},
+		{
+			"name": "05 - Submit Assessment",
+			"item": [
+				{
+					"name": "Submit Assessment - All Answered",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Status changed to on_review or completed\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(['on_review', 'completed']).to.include(jsonData.data.assessment.status);",
+									"});",
+									"",
+									"pm.test(\"UpdatedAt is present\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.assessment.updatedAt).to.not.be.null;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "answers[0].question_id",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "answers[0].answer_type",
+									"value": "essay",
+									"type": "text"
+								},
+								{
+									"key": "answers[0].text",
+									"value": "Object-oriented programming (OOP) is a programming paradigm that uses objects and classes to structure software programs. It is based on four main principles: encapsulation, inheritance, polymorphism, and abstraction. These principles help in creating modular, reusable, and maintainable code.",
+									"type": "text"
+								},
+								{
+									"key": "answers[1].question_id",
+									"value": "2",
+									"type": "text"
+								},
+								{
+									"key": "answers[1].answer_type",
+									"value": "mcq",
+									"type": "text"
+								},
+								{
+									"key": "answers[1].option_id",
+									"value": "1",
+									"type": "text",
+									"description": "Update with actual option ID"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/assessments/incomplete/{{assessmentId}}/submit",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"incomplete",
+								"{{assessmentId}}",
+								"submit"
+							]
+						},
+						"description": "Submit assessment with all questions answered. Status will be 'on_review' (has essay) or 'completed' (MCQ only with auto-grading)."
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Assessment - MCQ Only (Auto Grading)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Status is 'completed' (auto-graded)\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.assessment.status).to.eql('completed');",
+									"});",
+									"",
+									"pm.test(\"Score is calculated\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.assessment).to.have.property('score');",
+									"    pm.expect(jsonData.data.assessment.score).to.be.a('number');",
+									"});",
+									"",
+									"pm.test(\"UpdatedAt is present\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.assessment.updatedAt).to.not.be.null;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "answers[0].question_id",
+									"value": "3",
+									"type": "text",
+									"description": "MCQ question ID - update with actual value from assessment 2"
+								},
+								{
+									"key": "answers[0].answer_type",
+									"value": "mcq",
+									"type": "text"
+								},
+								{
+									"key": "answers[0].option_id",
+									"value": "5",
+									"type": "text",
+									"description": "Option ID - update with actual correct answer"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/assessments/incomplete/2/submit",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"incomplete",
+								"2",
+								"submit"
+							]
+						},
+						"description": "Submit assessment containing ONLY MCQ questions. Should automatically grade and set status to 'completed' with calculated score. Prerequisites: Assessment 2 should have only MCQ questions."
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Assessment - Incomplete (400)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error code is INCOMPLETE_ASSESSMENT\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error.code).to.eql('INCOMPLETE_ASSESSMENT');",
+									"});",
+									"",
+									"pm.test(\"Error shows unanswered questions\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error.details).to.have.property('unansweredQuestions');",
+									"    pm.expect(jsonData.error.details.unansweredQuestions).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "answers[0].question_id",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "answers[0].answer_type",
+									"value": "essay",
+									"type": "text"
+								},
+								{
+									"key": "answers[0].text",
+									"value": "Only answering question 1, not question 2",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/assessments/incomplete/{{assessmentId}}/submit",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"incomplete",
+								"{{assessmentId}}",
+								"submit"
+							]
+						},
+						"description": "Attempt to submit incomplete assessment. Should return 400 with unanswered question IDs."
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Assessment - Already Submitted (409)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 409\", function () {",
+									"    pm.response.to.have.status(409);",
+									"});",
+									"",
+									"pm.test(\"Error code is ALREADY_SUBMITTED\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error.code).to.eql('ALREADY_SUBMITTED');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "answers[0].question_id",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "answers[0].answer_type",
+									"value": "essay",
+									"type": "text"
+								},
+								{
+									"key": "answers[0].text",
+									"value": "Trying to resubmit",
+									"type": "text"
+								},
+								{
+									"key": "answers[1].question_id",
+									"value": "2",
+									"type": "text"
+								},
+								{
+									"key": "answers[1].answer_type",
+									"value": "mcq",
+									"type": "text"
+								},
+								{
+									"key": "answers[1].option_id",
+									"value": "1",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/assessments/incomplete/{{assessmentId}}/submit",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"incomplete",
+								"{{assessmentId}}",
+								"submit"
+							]
+						},
+						"description": "Attempt to submit already submitted assessment. Run this after successful submit. Should return 409."
+					},
+					"response": []
+				}
+			],
+			"description": "Submit assessment functionality with completeness validation and auto-grading"
+		},
+		{
+			"name": "06 - Completed Assessments",
+			"item": [
+				{
+					"name": "List Completed Assessments",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has data and paging\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData).to.have.property('paging');",
+									"});",
+									"",
+									"pm.test(\"Each assessment has required fields\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data.length > 0) {",
+									"        var assessment = jsonData.data[0];",
+									"        pm.expect(assessment).to.have.property('id');",
+									"        pm.expect(assessment).to.have.property('name');",
+									"        pm.expect(assessment).to.have.property('status');",
+									"        pm.expect(assessment).to.have.property('submittedAt');",
+									"        pm.expect(['on_review', 'completed']).to.include(assessment.status);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/assessments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments"
+							]
+						},
+						"description": "Get all completed assessments (submitted and graded). Run after submitting at least one assessment."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Completed Assessment Detail",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Assessment is completed\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.assessment.status).to.eql('completed');",
+									"});",
+									"",
+									"pm.test(\"All answers are visible\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var answeredCount = jsonData.data.questions.filter(q => q.answer !== null).length;",
+									"    pm.expect(answeredCount).to.eql(jsonData.data.questions.length);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/{{assessmentId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"{{assessmentId}}"
+							]
+						},
+						"description": "Get detail of completed assessment (read-only view). Run after submitting assessment."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Non-Completed Assessment (404)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test(\"Error code is ASSESSMENT_NOT_FOUND\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error.code).to.eql('ASSESSMENT_NOT_FOUND');",
+									"});",
+									"",
+									"pm.test(\"Error message indicates not completed\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error.message).to.satisfy(function(msg) {",
+									"        return msg.includes('not found') || msg.includes('not completed');",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/2",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"2"
+							]
+						},
+						"description": "Attempt to view a non-completed/non-submitted assessment as completed. Prerequisites: Assessment 2 should not be submitted yet. Should return 404."
+					},
+					"response": []
+				}
+			],
+			"description": "Completed assessments list and detail (read-only)"
+		},
+		{
+			"name": "07 - Security Tests",
+			"item": [
+				{
+					"name": "Access Protected Endpoint Without Token (401)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/incomplete",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"incomplete"
+							]
+						},
+						"description": "Attempt to access protected endpoint without authentication token"
+					},
+					"response": []
+				},
+				{
+					"name": "Access With Invalid Token (401)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "invalid_token_12345",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/incomplete",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"incomplete"
+							]
+						},
+						"description": "Attempt to access with invalid JWT token"
+					},
+					"response": []
+				},
+				{
+					"name": "Access Other Student's Assessment (403)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 403\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});",
+									"",
+									"pm.test(\"Error code is ACCESS_DENIED\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.error.code).to.eql('ACCESS_DENIED');",
+									"});",
+									"",
+									"pm.test(\"No data leaked\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.not.have.property('data');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{aliceToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/assessments/incomplete/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"assessments",
+								"incomplete",
+								"1"
+							]
+						},
+						"description": "CRITICAL SECURITY TEST: Attempt to access another student's assessment data. Prerequisites: Run 'Login as Alice' first. Alice should NOT be enrolled in assessment ID 1. Should return 403 Forbidden."
+					},
+					"response": []
+				}
+			],
+			"description": "Security and authorization tests"
+		}
+	]
+}
