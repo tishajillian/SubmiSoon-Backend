@@ -114,35 +114,6 @@ Test-Path SubmiSoonProject\appsettings.json
 
 ---
 
-## Alternative: Use .NET User Secrets (Development Only)
-
-Instead of `appsettings.json`, you can use .NET User Secrets for local development:
-
-```powershell
-# Navigate to the project directory
-cd SubmiSoonProject
-
-# Initialize user secrets
-dotnet user-secrets init
-
-# Set JWT Secret
-dotnet user-secrets set "JwtSettings:SecretKey" "YOUR_64_CHAR_HEX_STRING"
-
-# Set URL Signing Secret
-dotnet user-secrets set "UrlSigning:SecretKey" "YOUR_128_CHAR_HEX_STRING"
-```
-
-**Advantages:**
-- Secrets stored outside the project directory
-- Automatically excluded from version control
-- Per-user configuration
-
-**Disadvantages:**
-- Only works in Development environment
-- Requires additional setup for each developer
-
----
-
 ## Troubleshooting
 
 ### Error: "JWT Secret Key is too short"
@@ -183,24 +154,6 @@ The default connection string connects to:
 - **Database:** `SubmiSoonDB`
 - **Authentication:** Windows Authentication (Integrated Security)
 
-If you need to customize the database connection:
-
-1. Open `SubmiSoonProject\appsettings.json`
-2. Update the `ConnectionStrings:DefaultConnection` value:
-
-```json
-"ConnectionStrings": {
-  "DefaultConnection": "Server=YOUR_SERVER;Database=YOUR_DATABASE;Trusted_Connection=True;TrustServerCertificate=True;"
-}
-```
-
-**For SQL Server Authentication (username/password):**
-```json
-"ConnectionStrings": {
-  "DefaultConnection": "Server=YOUR_SERVER;Database=YOUR_DATABASE;User Id=YOUR_USERNAME;Password=YOUR_PASSWORD;TrustServerCertificate=True;"
-}
-```
-
 ---
 
 ## Need Help?
@@ -211,5 +164,3 @@ If you encounter issues during setup:
 2. Verify the secret lengths (64 and 128 characters)
 3. Ensure `appsettings.json` exists in the `SubmiSoonProject` directory
 4. Restart Visual Studio or the terminal after making changes
-
-For production deployment questions, consult your DevOps team or cloud provider documentation.
